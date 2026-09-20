@@ -19,8 +19,7 @@ def call_target_chatbot(query: str, config: ChatbotConfig) -> dict:
     }
 
 
-def run_test_batch(queries: list[str], config: ChatbotConfig, db: Session) -> list[Trace]:
-    """Calls the target chatbot for each query, saves each as a Trace, returns the saved rows."""
+def run_test_batch(queries: list[str], config: ChatbotConfig, db: Session, run_id: str, run_label: str) -> list[Trace]:
     traces = []
     for query in queries:
         try:
@@ -33,6 +32,8 @@ def run_test_batch(queries: list[str], config: ChatbotConfig, db: Session) -> li
             query=query,
             response=result["response"],
             retrieved_context=result["retrieved_context"],
+            run_id=run_id,
+            run_label=run_label,
         )
         db.add(trace)
         db.commit()

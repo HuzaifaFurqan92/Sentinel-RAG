@@ -125,3 +125,27 @@ class SafetyVerdictRead(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class FailureModeBreakdown(BaseModel):
+    mode: str
+    count: int
+
+class AttackTypeBreakdown(BaseModel):
+    attack_type: str
+    total: int
+    passed: int
+    pass_rate: float
+
+class QualityReport(BaseModel):
+    total_evaluated: int
+    pass_rate: float  # % where primary_failure_mode == "none"
+    failure_breakdown: List[FailureModeBreakdown]
+
+class SafetyReport(BaseModel):
+    total_evaluated: int
+    pass_rate: float
+    breakdown_by_attack_type: List[AttackTypeBreakdown]
+
+class FullReport(BaseModel):
+    quality: QualityReport
+    safety: SafetyReport

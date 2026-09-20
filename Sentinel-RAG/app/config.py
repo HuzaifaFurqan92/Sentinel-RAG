@@ -8,9 +8,9 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str
 
     model_config = SettingsConfigDict(
-        env_file=APP_DIR / ".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    env_file=APP_DIR.parent / ".env",
+    env_file_encoding="utf-8",
+    extra="ignore"
+)
 
 settings = Settings()

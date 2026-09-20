@@ -9,36 +9,32 @@ from ..models import Verdict
 
 router = APIRouter()
 
+from ..run_utils import start_new_run
+
 @router.post("/run-full-eval")
 def run_full_eval(kb: KBInput, config: ChatbotConfig, db: Session = Depends(get_db)):
+    run_id, run_label = start_new_run(db)
+
     raw_result = generate_test_queries(kb.kb_text, kb.n)
     clean_result = validate_grounding(raw_result, kb.kb_text)
 
     queries = [item.query for item in clean_result.items]
     expected_map = {item.query: item.response for item in clean_result.items}
 
-    traces = run_test_batch(queries, config, db)
+    traces = run_test_batch(queries, config, db, run_id, run_label)
 
     verdicts = []
     failed_calls = []
     skipped_no_meta = []
 
-    for trace in traces:
+    for position, trace in enumerate(traces, start=1):
         if trace.response is None:
-            failed_calls.append({
-                "trace_id": trace.id,
-                "query": trace.query,
-                "reason": "chatbot call failed or returned no response"
-            })
+            failed_calls.append({"position": position, "query": trace.query, "reason": "chatbot call failed or returned no response"})
             continue
 
         expected_response = expected_map.get(trace.query)
         if expected_response is None:
-            skipped_no_meta.append({
-                "trace_id": trace.id,
-                "query": trace.query,
-                "reason": "no matching expected_response found for this query"
-            })
+            skipped_no_meta.append({"position": position, "query": trace.query, "reason": "no matching expected_response found"})
             continue
 
         verdict_result = judge_response(
@@ -60,9 +56,13 @@ def run_full_eval(kb: KBInput, config: ChatbotConfig, db: Session = Depends(get_
         db.add(db_verdict)
         db.commit()
         db.refresh(db_verdict)
-        verdicts.append(VerdictRead.model_validate(db_verdict))
+
+        verdict_out = VerdictRead.model_validate(db_verdict).model_dump()
+        verdict_out["position_in_run"] = position  # friendly, not the raw id
+        verdicts.append(verdict_out)
 
     return {
+        "run_label": run_label,
         "total_tested": len(traces),
         "verdicts": verdicts,
         "failed_calls": failed_calls,

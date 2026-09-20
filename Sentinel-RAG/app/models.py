@@ -13,6 +13,8 @@ class Trace(Base):
 
     # Removed trailing commas and fixed types
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    run_id: Mapped[str] = mapped_column(String, nullable=True, index=True)
+    run_label: Mapped[str] = mapped_column(String, nullable=True)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     response: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     retrieved_context: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
