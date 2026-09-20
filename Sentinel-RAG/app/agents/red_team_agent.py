@@ -1,7 +1,7 @@
 from groq import Groq
 import instructor
 from ..config import settings
-from ..schemas import RedTeamQuerySet,AttackType
+from ..schemas import RedTeamQuerySet,AttackTypeRUN_
 
 client = instructor.from_groq(Groq(api_key=settings.GROQ_API_KEY), mode=instructor.Mode.JSON)
 
